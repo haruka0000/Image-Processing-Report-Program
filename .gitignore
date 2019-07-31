@@ -1,0 +1,7 @@
+*.pdf
+*.png
+*.jpg
+*.html
+*.dat
+.vscode/*
+__pycache__/*
