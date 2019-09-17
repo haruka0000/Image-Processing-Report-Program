@@ -27,17 +27,17 @@ def KCR(dat, param, sigma):
     return D
 
 
-def BD(pred_params, true_param, n):
+def BE(pred_params, true_param, n):
     u_true  = np.array(true_param)
     u       = [np.array(ui) for ui in pred_params]
     # print(u_true, u)
 
     I       = np.eye(len(true_param))
     uut     = np.dot(u_true.reshape(-1, 1), u_true.reshape(1, -1))
-    D       = np.sqrt(sum([np.linalg.norm((I - uut) @ ui) for ui in u]) / n)    
-    B       = np.linalg.norm(sum([((I - uut) @ ui) for ui in u]) / n)
+    E       = np.sqrt(sum([np.power(np.linalg.norm((I - uut) @ ui, ord=2), 2) for ui in u]) / n)    
+    B       = np.linalg.norm(np.array([((I - uut) @ ui) for ui in u]) / n, ord=2)
 
-    return B, D
+    return B, E
 
 
 

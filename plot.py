@@ -21,12 +21,12 @@ def plot(sigma=[], lsm=[], mle=[], kcr=[], lsm_B=[], mle_B=[]):
     data_LSM_B = go.Scatter(
         x = sigma,
         y = lsm_B,
-        name = 'lsm'
+        name = 'LSM'
     )    
     data_MLE_B = go.Scatter(
         x = sigma,
         y = mle_B,
-        name = 'mle'
+        name = 'MLE'
     )
 
     data = go.Data([data_LSM, data_MLE, data_KCR])
