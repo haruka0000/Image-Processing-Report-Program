@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import math
 import sys
+import copy
 # from scipy import ndimage
 
 # 画像の傾き検出
@@ -30,7 +31,7 @@ def get_degree(img_1, img_2):
 
 
 def calc_degree(org_img, filename): 
-    img = org_img
+    img = copy.deepcopy(org_img)
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray_img, 50, 150, apertureSize = 3)
     
@@ -53,7 +54,7 @@ def calc_degree(org_img, filename):
             count += 1
 
             # 利用したラインを描画
-            # cv2.line(img,(x1,y1),(x2,y2),(0,0,0),2)
+            cv2.line(img,(x1,y1),(x2,y2),(0,0,0),2)
 
     # 角度の平均
     ave_deg = sum_deg / count 
@@ -83,7 +84,8 @@ def get_scale(img1, img2):
     return scale_ave
 
 def get_r(img_org, name, thr01, thr02):
-    img = cv2.medianBlur(img_org,5)
+    img = copy.deepcopy(img_org)
+    img = cv2.medianBlur(img,5)
     # cimg = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     gray = cv2.blur(gray, (9,9))
@@ -98,9 +100,9 @@ def get_r(img_org, name, thr01, thr02):
         # draw the outer circle
         # cv2.circle(img_org,(i[0],i[1]), i[2], (0,255,0),2)
         # draw the center of the circle
-        # cv2.circle(img,(i[0],i[1]), 2, (0,0,255),3)
+        cv2.circle(img,(i[0],i[1]), i[2], (0,255,0),3)
         params.append(i)
-    # cv2.imwrite('detected_' + name + '.png', img_org)
+    cv2.imwrite('houghcircles_' + name + '.png', img)
 
     return params
 
