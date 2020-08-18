@@ -98,7 +98,7 @@ def viewEllipse(dat, true_param, est_param):
 
 
 def exec(point_x, point_y, t_param):
-    sigma = [0.1*i for i in range(10)]
+    sigma = [0.01*i for i in range(100)]
     kcr = [KCR([point_x, point_y], t_param, sigmai) for sigmai in sigma]
     lsm_B_list = []
     lsm_D_list = []
@@ -119,8 +119,8 @@ def exec(point_x, point_y, t_param):
             params_lsm.append(LSM([x, y]))
             params_mle.append(MLE([x, y], p, ep=1.0e-6))
         # print(params_lsm)
-        lsm_B, lsm_D = BD(params_lsm, t_param, n)
-        mle_B, mle_D = BD(params_mle, t_param, n)
+        lsm_B, lsm_D = BE(params_lsm, t_param, n)
+        mle_B, mle_D = BE(params_mle, t_param, n)
         lsm_B_list.append(lsm_B)
         lsm_D_list.append(lsm_D)
         mle_B_list.append(mle_B)

@@ -8,29 +8,32 @@ def main():
     img2 = cv2.imread("./output-2019.png")
     gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-    theta, s = gaussian_newton.gaussianNewton(gray1, gray2, (0.4, 1.3), 0.005)
-    print(theta, s)
+    # theta, s = gaussian_newton.gaussianNewton(gray1, gray2, (0.4, 1.3), 0.005)
+    # print(theta, s)
 
     # imgproc(img1)
-    angle = hough.get_degree(img1, img2)
-    scale = hough.get_scale(img1, img2)
-    # img1 = similarity(img1, angle, scale)
-    print("hough angle =", np.rad2deg(angle), "[deg], hough scale =", scale)
-    compare(img1, img2)
+    # angle = hough.get_degree(img1, img2)
+    # scale = hough.get_scale(img1, img2)
+    # img_hough = similarity(img1, angle, scale)
+    # cv2.imwrite('estimate_hough.png', img_hough)
+    # print("hough angle =", angle, "[deg], hough scale =", scale)
+    # compare(img_hough, img2, "hough")
+
     # return
     kp1, kp2, matches = akaze(img1, img2)
     matches = sorted(matches, key=lambda x:x[0].distance)
     img1_pt = [list(map(int, kp1[m[0].queryIdx].pt)) for m in matches]
     img2_pt = [list(map(int, kp2[m[0].trainIdx].pt)) for m in matches]
     # img_surf = cv2.drawMatchesKnn(img1, kp1, img2, kp2, matches[:3], None, flags=2)
-    img_akaze = cv2.drawMatchesKnn(img1, kp1, img2, kp2, matches, None, flags=2)
-    cv2.imwrite('akaze.png', img_akaze)
-    res, af = imgproc(img1, img2, img1_pt, img2_pt)
-    cv2.imwrite('estimate.png', res)
-    compare(img2, res)
+    matching_akaze = cv2.drawMatchesKnn(img1, kp1, img2, kp2, matches, None, flags=2)
+    cv2.imwrite('feature_matching_akaze.png', matching_akaze)
+    img_akaze, af = imgproc(img1, img2, img1_pt, img2_pt)
+    cv2.imwrite('estimate_akaze.png', img_akaze)
+    # compare(img2, img_akaze, "akaze")
     ag, sc = calcAffineMatrix(af)
+    print("akaze angle =", np.rad2deg(ag), "[deg], akaze scale =", sc)
     reimg = similarity(img1, ag, sc)
-    # compare(reimg, img2)
+    compare(reimg, img2, "akaze")
 
 
 def similarity(img, angle, scale):
@@ -46,19 +49,19 @@ def similarity(img, angle, scale):
 
 def calcAffineMatrix(af):
     angle = np.arctan(af[0, 1] / af[0, 0])
-    scale = af[0, 1] / np.sin(angle)
-    print("angle =", np.rad2deg(angle), "[deg],", "scale =", scale)
+    scale = af[0, 1] / np.sin(abs(angle))
+    # print("angle =", np.rad2deg(angle), "[deg],", "scale =", scale)
     return angle, scale
 
 
-def compare(img1, img2):
+def compare(img1, img2, fname):
     img_hconcat = cv2.hconcat([img1, img2])
-    cv2.imwrite("compare.png", img_hconcat)
+    cv2.imwrite("compare_"+fname+".png", img_hconcat)
 
     bgObg = cv2.bgsegm.createBackgroundSubtractorMOG()
     fgmask = bgObg.apply(img1)
     fgmask = bgObg.apply(img2)
-    cv2.imwrite("diff.png", fgmask)
+    cv2.imwrite("diff_"+fname+".png", fgmask)
 
 
 def imgproc(img1, img2, img1_pt, img2_pt):
@@ -76,8 +79,10 @@ def imgproc(img1, img2, img1_pt, img2_pt):
             break
     src = np.float32(src)
     dst = np.float32(dst)
-    
+    print(src, dst)
     af = cv2.getAffineTransform(src, dst)
+    # af[0, 2] = 0
+    # af[1, 2] = 0
     print(af)
     # M = cv2.getRotationMatrix2D((img2.shape[1]/2,img2.shape[0]/2),90,1)
     img = cv2.warpAffine(img1, af, (img2.shape[1], img2.shape[0]))
@@ -88,8 +93,6 @@ def imgproc(img1, img2, img1_pt, img2_pt):
 def surf(img1, img2):
     gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-    
-
 
     surf = cv2.xfeatures2d.SURF_create()
     kp1_surf, des1_surf = surf.detectAndCompute(gray1, None)
@@ -107,12 +110,13 @@ def surf(img1, img2):
     # cv2.imwrite('pic2_out-match_surf.jpg', img_surf)
     return kp1_surf, kp2_surf, thr_surf
 
+
 def akaze(img1, img2):
     gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
     # ret,gray1 = cv2.threshold(gray1,254,255,cv2.THRESH_BINARY)
     # ret,gray2 = cv2.threshold(gray2,254,255,cv2.THRESH_BINARY)
-    cv2.imwrite("test.png", gray1)
+    # cv2.imwrite("test.png", gray1)
 
     # gray1 = cv2.Canny(gray1, 70, 90)
     # gray2 = cv2.Canny(gray2, 70, 90)
@@ -123,13 +127,14 @@ def akaze(img1, img2):
     kp2, des2 = akaze.detectAndCompute(gray2, None)
 
     bf = cv2.BFMatcher()
-    matches_surf = bf.knnMatch(des1, des2, k=2)
+    matches_akaze = bf.knnMatch(des1, des2, k=2)
 
     thr = []
-    for i, j in matches_surf:
-        if i.distance < 0.5 * j.distance:
+    for i, j in matches_akaze:
+        if i.distance < 0.6 * j.distance:
             thr.append([i])
 
+    # good = sorted(thr, key=lambda x : x[1].distance)
     img_surf = cv2.drawMatchesKnn(img1, kp1, img2, kp2, thr, None, flags=2)
     # cv2.imwrite('pic2_out-match_surf.jpg', img_surf)
     return kp1, kp2, thr
