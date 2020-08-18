@@ -2,6 +2,6 @@
 *.png
 *.jpg
 *.html
-*.dat
 .vscode/*
 __pycache__/*
+.python-version
